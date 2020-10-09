@@ -1,0 +1,16 @@
+{
+  "name": "tsduplifw",
+  "version": "1.0.0",
+  "description": "Forward PUT requests for TSD upload links",
+  "main": "srv.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Florian Krull",
+  "license": "ISC"
+}
