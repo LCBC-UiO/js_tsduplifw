@@ -21,6 +21,10 @@ app.put('/upload', async (req, res, _) => {
     if (!file_name) {
       throw new Error('missing filename param');
     }
+    // any ../ within file names?
+    if (file_name.indexOf("../") != -1) {
+      throw new Error('"../" not allowed within filename param');
+    }
     // has bucket?
     const bucket_id = req.query.bucket;
     if (!bucket_id) {
