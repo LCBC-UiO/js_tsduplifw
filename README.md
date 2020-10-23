@@ -9,6 +9,16 @@ Forward PUT requests for TSD upload links.
   * `npm install`
   * `node srv.js`
 
+
+To upload a file use PUT
+```
+curl -X PUT --data-binary @./foo/bigfile.bar "https://replace.me/tsduplifw/upload?filename=foo/bigfile.bar&bucket=bucket1"
+```
+where
+  * `filename` is a path 
+  * `bucket` is a bucket ID defined in env
+
+
 ## Server setup
 
 Starting from a Debian 10 base
