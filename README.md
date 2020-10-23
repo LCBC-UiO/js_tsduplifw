@@ -1,5 +1,7 @@
 # TSD upload link forwarder
 
+Forward PUT requests for TSD upload links.
+
 ## Setup
 
 Starting from a Debian 10 base
@@ -60,4 +62,16 @@ sudo npm install pm2 -g
 # from "pm2 startup":
 sudo env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup systemd -u debian --hp /home/debian
 
+#------------------------------------------------------------------------------
+
+
+# install tsduplifw
+
+git clone https://github.com/LCBC-UiO/js_tsduplifw
+cd js_tsduplifw
+npm install
+pm2 delete all || true
+pm2 start srv.js --name tsduplifw
+pm2 cleardump
+pm2 save
 ```
