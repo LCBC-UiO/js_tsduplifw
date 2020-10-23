@@ -1,5 +1,6 @@
 const app = require("express")();
 const fetch = require("node-fetch");
+require('dotenv').config()
 
 const g = {
   tsdUrlCapTok: "https://data.tsd.usit.no/capability_token",
