@@ -34,6 +34,7 @@ server {
   server_name ${server_name};
   location  ~ ^/tsduplifw/(.*)$ {
     proxy_pass http://127.0.0.1:45585/$1$is_args$args;
+    proxy_request_buffering off;
   }
 }
 EOI
