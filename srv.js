@@ -4,7 +4,7 @@ require('dotenv').config()
 
 const g = {
   tsdUrlCapTok: "https://data.tsd.usit.no/capability_token",
-  tsdUrlUpload: "https://data.tsd.usit.no/v1/p23/files/stream",
+  tsdUrlUpload: `https://data.tsd.usit.no/v1/${process.env.TSD_PROJECT}/files/stream/${process.env.TSD_GROUP}/`,
   linkId: process.env.LINK_ID,
   port: parseInt(process.env.PORT),
 };
