@@ -15,6 +15,7 @@ const listener = app.listen(g.port, () => {
 });
 
 app.put('/upload', async (req, res, _) => {
+  const ts = (new Date()).getTime();
   try {
     // has filename?
     const file_name = req.query.filename;
@@ -30,6 +31,7 @@ app.put('/upload', async (req, res, _) => {
     if (!bucket_id) {
       throw new Error('missing bucket param');
     }
+    console.log(`${ts} streaming ${bucket_id} ${file_name}`);
     // bucket allowed?
     if (!g.allowedBuckets.includes(bucket_id)) {
       throw new Error(`bucket "${bucket_id}" is undefined`);
@@ -67,7 +69,9 @@ app.put('/upload', async (req, res, _) => {
     }
     res.sendStatus(r.status);
   } catch (e) {
+    console.log(`${ts} error - ${e.message}`);
     res.status(500).json({error: e.message});
     return;
   }
+  console.log(`${ts} ok`);
 });
