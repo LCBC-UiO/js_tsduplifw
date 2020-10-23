@@ -7,6 +7,7 @@ const g = {
   tsdUrlUpload: `https://data.tsd.usit.no/v1/${process.env.TSD_PROJECT}/files/stream/${process.env.TSD_GROUP}/`,
   linkId: process.env.LINK_ID,
   port: parseInt(process.env.PORT),
+  allowedBuckets: (process.env.BUCKETS).split(/(\s+)/).filter( e => e.length > 1),
 };
 
 const listener = app.listen(g.port, () => {
@@ -19,6 +20,15 @@ app.put('/upload', async (req, res, _) => {
     const file_name = req.query.filename;
     if (!file_name) {
       throw new Error('missing filename param');
+    }
+    // has bucket?
+    const bucket_id = req.query.bucket;
+    if (!bucket_id) {
+      throw new Error('missing bucket param');
+    }
+    // bucket allowed?
+    if (!g.allowedBuckets.includes(bucket_id)) {
+      throw new Error(`bucket "${bucket_id}" is undefined`);
     }
     // get token
     const cap_tok = await (async () => {
@@ -40,7 +50,7 @@ app.put('/upload', async (req, res, _) => {
     // search for content-length field - uses null if not set
     const cl_key = Object.keys(req.headers).find(k => k.toLowerCase() === 'content-length');
     // stream to tsd
-    const r = await fetch(`${g.tsdUrlUpload}/${encodeURI(file_name)}`, {
+    const r = await fetch(`${g.tsdUrlUpload}/${encodeURI(bucket_id)}/${encodeURI(file_name)}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${cap_tok}`,
