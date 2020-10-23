@@ -2,7 +2,14 @@
 
 Forward PUT requests for TSD upload links.
 
-## Setup
+## Quick start
+
+  * clone the repo && cd js_tsduplifw
+  * create a file `.env` to make your config (use `cp .env_example .env` to get started)
+  * `npm install`
+  * `node srv.js`
+
+## Server setup
 
 Starting from a Debian 10 base
 
