@@ -4,7 +4,7 @@ require('dotenv').config()
 
 const g = {
   tsdUrlCapTok: "https://data.tsd.usit.no/capability_token",
-  tsdUrlUpload: `https://data.tsd.usit.no/v1/${process.env.TSD_PROJECT}/files/stream/${process.env.TSD_GROUP}/`,
+  tsdUrlUpload: `https://data.tsd.usit.no/v1/${process.env.TSD_PROJECT}/files/stream/${process.env.TSD_GROUP}/${process.env.REMOTE_DIR}`,
   linkId: process.env.LINK_ID,
   port: parseInt(process.env.PORT),
   allowedBuckets: (process.env.BUCKETS).split(/(\s+)/).filter( e => e.length > 1),
