@@ -14,6 +14,14 @@ const listener = app.listen(g.port, () => {
   console.log("Listening on port " + listener.address().port);
 });
 
+// app.all('/upload', function(req, res, next) {
+//   res.header('Access-Control-Allow-Origin', '*');
+//   res.header('Access-Control-Allow-Methods', 'PUT, OPTIONS');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type');
+//   res.header('Access-Control-Allow-Credentials', true);
+//   next();
+//  });
+
 app.put('/upload', async (req, res, _) => {
   const ts = (new Date()).getTime();
   try {
@@ -67,11 +75,10 @@ app.put('/upload', async (req, res, _) => {
     if (!r.ok) {
       throw new Error(r.statusText);
     }
-    res.sendStatus(r.status);
+    console.log(`${ts} ok`);
+    return res.sendStatus(r.status);
   } catch (e) {
     console.log(`${ts} error - ${e.message}`);
-    res.status(500).json({error: e.message});
-    return;
+    return res.status(400).json({error: e.message});
   }
-  console.log(`${ts} ok`);
 });
