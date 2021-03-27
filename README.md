@@ -87,7 +87,7 @@ sudo env PATH=$PATH:/usr/bin /usr/local/lib/node_modules/pm2/bin/pm2 startup sys
 git clone https://github.com/LCBC-UiO/js_tsduplifw
 cd js_tsduplifw
 npm install
-pm2 delete all || true
+pm2 delete tsduplifw || true
 pm2 start srv.js --name tsduplifw
 pm2 cleardump
 pm2 save
