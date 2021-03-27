@@ -1,6 +1,7 @@
 const app = require("express")();
 const fetch = require("node-fetch");
 const jwt_decode = require('jwt-decode');
+const Mutex = require('async-mutex').Mutex;
 require('dotenv').config()
 
 const g = {
@@ -12,6 +13,7 @@ const g = {
 };
 
 let g_cap_tok = null;
+const g_cap_tok_mutex = new Mutex();
 
 const listener = app.listen(g.port, () => {
   console.log("Listening on port " + listener.address().port);
@@ -40,35 +42,37 @@ app.put('/upload', async (req, res, _) => {
       throw new Error(`bucket "${bucket_id}" is undefined`);
     }
     // do we have a valid jwt token?
-    if (g_cap_tok) {
-      const cap_tok_dec = jwt_decode(g_cap_tok);
-      const ts_curr = Math.floor(new Date().getTime() / 1000); // get epoch
-      const min_remaining_ttl_sec = 5*60;
-      if (cap_tok_dec.exp - ts_curr < min_remaining_ttl_sec) {
-        console.log(`cap token expired (${cap_tok_dec.exp}) at ${ts_curr}`);
-        g_cap_tok = null;
-      }
-    }
-    // new get token?
-    if (!g_cap_tok) {
-      console.log("getting new cap token");
-      g_cap_tok = await (async () => {
-        const r = await fetch(g.tsdUrlCapTok, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            id: g.linkId
-          }),
-        });
-        if (!r.ok) {
-          throw new Error(r.statusText);
+    await g_cap_tok_mutex.runExclusive(async () => {
+      if (g_cap_tok) {
+        const cap_tok_dec = jwt_decode(g_cap_tok);
+        const ts_curr = Math.floor(new Date().getTime() / 1000); // get epoch
+        const min_remaining_ttl_sec = 5*60;
+        if (cap_tok_dec.exp - ts_curr < min_remaining_ttl_sec) {
+          console.log(`cap token expired (${cap_tok_dec.exp}) at ${ts_curr}`);
+          g_cap_tok = null;
         }
-        const j = await r.json();
-        return j.token;
-      })();
-    }
+      }
+      // new get token?
+      if (!g_cap_tok) {
+        console.log("getting new cap token");
+        g_cap_tok = await (async () => {
+          const r = await fetch(g.tsdUrlCapTok, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              id: g.linkId
+            }),
+          });
+          if (!r.ok) {
+            throw new Error(r.statusText);
+          }
+          const j = await r.json();
+          return j.token;
+        })();
+      }
+    });
     // search for content-length field - uses null if not set
     const cl_key = Object.keys(req.headers).find(k => k.toLowerCase() === 'content-length');
     // stream to tsd
