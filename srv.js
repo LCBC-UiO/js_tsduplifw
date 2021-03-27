@@ -1,5 +1,6 @@
 const app = require("express")();
 const fetch = require("node-fetch");
+const jwt_decode = require('jwt-decode');
 require('dotenv').config()
 
 const g = {
@@ -10,17 +11,11 @@ const g = {
   allowedBuckets: (process.env.BUCKETS).split(/(\s+)/).filter( e => e.length > 1),
 };
 
+let g_cap_tok = null;
+
 const listener = app.listen(g.port, () => {
   console.log("Listening on port " + listener.address().port);
 });
-
-// app.all('/upload', function(req, res, next) {
-//   res.header('Access-Control-Allow-Origin', '*');
-//   res.header('Access-Control-Allow-Methods', 'PUT, OPTIONS');
-//   res.header('Access-Control-Allow-Headers', 'Content-Type');
-//   res.header('Access-Control-Allow-Credentials', true);
-//   next();
-//  });
 
 app.put('/upload', async (req, res, _) => {
   const ts = (new Date()).getTime();
@@ -44,30 +39,43 @@ app.put('/upload', async (req, res, _) => {
     if (!g.allowedBuckets.includes(bucket_id)) {
       throw new Error(`bucket "${bucket_id}" is undefined`);
     }
-    // get token
-    const cap_tok = await (async () => {
-      const r = await fetch(g.tsdUrlCapTok, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          id: g.linkId
-        }),
-      });
-      if (!r.ok) {
-        throw new Error(r.statusText);
+    // do we have a valid jwt token?
+    if (g_cap_tok) {
+      const cap_tok_dec = jwt_decode(g_cap_tok);
+      const ts_curr = Math.floor(new Date().getTime() / 1000); // get epoch
+      const min_remaining_ttl_sec = 5*60;
+      if (cap_tok_dec.exp - ts_curr < min_remaining_ttl_sec) {
+        console.log(`cap token expired (${cap_tok_dec.exp}) at ${ts_curr}`);
+        g_cap_tok = null;
       }
-      const j = await r.json();
-      return j.token;
-    })();
+    }
+    // new get token?
+    if (!g_cap_tok) {
+      console.log("getting new cap token");
+      g_cap_tok = await (async () => {
+        const r = await fetch(g.tsdUrlCapTok, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: g.linkId
+          }),
+        });
+        if (!r.ok) {
+          throw new Error(r.statusText);
+        }
+        const j = await r.json();
+        return j.token;
+      })();
+    }
     // search for content-length field - uses null if not set
     const cl_key = Object.keys(req.headers).find(k => k.toLowerCase() === 'content-length');
     // stream to tsd
     const r = await fetch(`${g.tsdUrlUpload}/${encodeURI(bucket_id)}/${encodeURI(file_name)}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${cap_tok}`,
+        'Authorization': `Bearer ${g_cap_tok}`,
         ...(!!cl_key && { 'Content-length' : req.headers[cl_key] }), // cond. dict entry
       },
       body: req,
